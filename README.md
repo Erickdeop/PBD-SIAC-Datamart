@@ -1,5 +1,6 @@
 # PBD-SIAC-Datamart
-Repositório que armazena os códigos, scripts, documentação e artefatos produzidos durante o desenvolvimento do trabalho Data Mart e dos processos ETL
+Repositório que armazena os códigos, scripts, documentação e artefatos produzidos durante o desenvolvimento do trabalho Data Mart e dos processos ETL.
+Esse repositório necessita de pull requests para que os códigos possam ir para a main, a fim de evitar códigos não desejados.
 
 ## Estrutura de Diretórios
 
