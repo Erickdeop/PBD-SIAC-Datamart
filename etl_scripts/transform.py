@@ -35,7 +35,7 @@ def parse_trabalhos(texto):
     for bloco in blocos[1:]:
         linhas = [l.strip() for l in bloco.splitlines() if l.strip()]
         id_trab = linhas[0]
-        titulo = linhas[1]
+        partes_titulo = []
         unidade = next((l.replace("Unidade:", "").strip()
                         for l in linhas if l.startswith("Unidade:")), None)
         centro = next((l.replace("Centro:", "").strip()
@@ -60,6 +60,11 @@ def parse_trabalhos(texto):
             inicio_autores = idx_unidade + 1 if idx_unidade is not None else 2
         autores = []
         resumo_linhas = []
+
+        for i in range(1, idx_unidade if idx_unidade else 2):
+            partes_titulo.append(linhas[i])
+        
+        titulo = " ".join(partes_titulo)
         for i in range(inicio_autores, idx_contato):
             if " - " in linhas[i]:
                 autores.append(linhas[i])
