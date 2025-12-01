@@ -32,7 +32,7 @@ def parse_trabalhos(texto):
     blocos = re.split(r"(?=T-\d{3})", texto)
     blocos = [b.strip() for b in blocos if b.strip()]
     resultados = []
-    for bloco in blocos:
+    for bloco in blocos[1:]:
         linhas = [l.strip() for l in bloco.splitlines() if l.strip()]
         id_trab = linhas[0]
         titulo = linhas[1]
