@@ -3,8 +3,9 @@ from PyPDF2.errors import PdfReadError
 from pathlib import Path
 from tqdm import tqdm
 import re
-from ftfy import fix_text
 import json
+import re
+from utils_text import limpar_texto, padronizar_autor
 
 def extrair(bloco, campos, campo):
     indice = campos.index(campo)
@@ -28,14 +29,12 @@ def parse_artigos(texto):
         artigos.append(artigo)
     return artigos
 
-import re
-
 def separa_nomes_autores(linha_nomes):
-    if "Autor(es):" in linha_nomes:
-        linha_nomes = linha_nomes.split("Autor(es):")[1]
     arrumado = re.sub(r'([a-zá-ú])([A-Z])', r'\1\n\2', linha_nomes)
-    linhas = [linha.strip() for linha in arrumado.split("\n") if linha.strip()]
-    return linhas
+    nomes = [linha.strip() for linha in arrumado.split("\n") if linha.strip()]
+    nomes = [linha.split("-")[0].strip() for linha in nomes]
+    nomes = [padronizar_autor(nome) for nome in nomes]
+    return nomes
 
 def parse_trabalhos(texto):
     blocos = re.split(r"(?=T\s*-\s*\d{3})", texto)
@@ -85,12 +84,25 @@ def parse_trabalhos(texto):
             partes_titulo.append(linhas[i])
         
         titulo = " ".join(partes_titulo)
+        nome_autor = True if idx_unidade else False
         for i in range(inicio_autores, idx_contato):
-            if any(s in linhas[i] for s in ["Autor(es):", "- Técnico", "- Externo", "- Estudante de Graduação", "- Docente", "- Discente", " - Outro"]):
+            if any(s in linhas[i] for s in ["- Técnico", "- Externo", "- Estudante de Graduação", "- Docente", "- Discente", " - Outro"]):
                 nomes_separados = separa_nomes_autores(linhas[i])
                 autores += nomes_separados
+            elif "Autor(es):" in linhas[i]:
+                    nomes_separados = separa_nomes_autores(linhas[i].split("Autor(es):")[1].strip())
+                    autores += nomes_separados
+                    if not nome_autor:
+                        nome_autor = True
+            elif nome_autor:
+                    if len(linhas[i].split(" ")) > 10:
+                        resumo_linhas.append(linhas[i].strip())
+                        nome_autor = False
+                    else:
+                        autores += separa_nomes_autores(linhas[i])
             else:
                 resumo_linhas.append(linhas[i])
+    
         resumo = " ".join(resumo_linhas).strip()
         resultados.append({
             "id": id_trab,
@@ -107,8 +119,6 @@ def main():
     path = Path('data')
     for arquivo in tqdm(path.glob('*.pdf'), total=len(list(path.glob('*.pdf')))):
         ano = arquivo.stem[-4:]
-        if ano != "2014":
-            continue
         try:
             reader = PdfReader(arquivo)
         except PdfReadError:
@@ -117,7 +127,7 @@ def main():
         texto = ""
         for pagina in tqdm(reader.pages):
             texto += pagina.extract_text() or ""
-        texto = fix_text(texto)
+        texto = limpar_texto(texto)
         parsed = parse_trabalhos(texto) if ano != '2016' else parse_artigos(texto)
         with open(path / f'caderno_parsed_{ano}.json', 'w', encoding="utf-8") as f:
             json.dump(parsed, f, ensure_ascii=False, indent=4)
