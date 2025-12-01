@@ -38,7 +38,7 @@ def separa_nomes_autores(linha_nomes):
     return linhas
 
 def parse_trabalhos(texto):
-    blocos = re.split(r"(?=T-\d{3})", texto)
+    blocos = re.split(r"(?=T\s*-\s*\d{3})", texto)
     blocos = [b.strip() for b in blocos if b.strip()]
     resultados = []
     for bloco in blocos[1:]:
@@ -107,8 +107,8 @@ def main():
     path = Path('data')
     for arquivo in tqdm(path.glob('*.pdf'), total=len(list(path.glob('*.pdf')))):
         ano = arquivo.stem[-4:]
-        # if ano != "2012":
-        #     continue
+        if ano != "2014":
+            continue
         try:
             reader = PdfReader(arquivo)
         except PdfReadError:
