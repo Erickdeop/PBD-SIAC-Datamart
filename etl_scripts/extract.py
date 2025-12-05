@@ -53,13 +53,24 @@ async def extrair_links_cadernos_novos(client, url):
 async def baixar_pdf(client, nome_pdf, path, url_pdf):
     print(f'Baixando: {nome_pdf} -> {url_pdf}')
 
-    r = await client.get(url_pdf)
-    r.raise_for_status()
+    try:
+        r = await client.get(url_pdf)
+        r.raise_for_status()
 
-    with open(f'{path / nome_pdf}', 'wb') as f:
-        f.write(r.content)
+        content = r.content
 
-    print(f'Salvo: {nome_pdf}')
+        if not content or len(content) < 200:  
+            print(f'Arquivo ignorado (vazio ou muito pequeno): {nome_pdf}')
+            return
+
+        with open(path / nome_pdf, 'wb') as f:
+            f.write(content)
+
+        print(f'Salvo: {nome_pdf}')
+
+    except httpx.HTTPError as e:
+        print(f'❌ Erro ao baixar {nome_pdf}: {e}')
+
 
 async def main():
     url = 'https://siac.ufrj.br/edicoes-anteriores-e-certificados/'
